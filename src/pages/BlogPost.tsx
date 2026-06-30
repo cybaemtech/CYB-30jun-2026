@@ -21,6 +21,9 @@ import {
   MousePointerClick,
   LineChart,
   Check,
+  Copy,
+  Instagram,
+  List,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -28,7 +31,8 @@ import SEOHead from "@/components/SEOHead";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { fetchGoogleSheetsData } from "@/hooks/useBlogData";
- 
+import { toast } from "sonner";
+
 interface BlogPostData {
   id: string;
   title: string;
@@ -52,6 +56,26 @@ const BlogPost = () => {
     { id: string; text: string; level: number }[]
 >([]);
   const [progress, setProgress] = useState(0);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+ 
+  useEffect(() => {
+    if (slug) {
+      const stored = localStorage.getItem(`bookmark_${slug}`);
+      setIsBookmarked(stored === 'true');
+    }
+  }, [slug]);
+
+  const toggleBookmark = () => {
+    const newValue = !isBookmarked;
+    setIsBookmarked(newValue);
+    if (newValue) {
+      localStorage.setItem(`bookmark_${slug}`, 'true');
+      toast.success("Article bookmarked");
+    } else {
+      localStorage.removeItem(`bookmark_${slug}`);
+      toast.info("Bookmark removed");
+    }
+  };
  
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -229,20 +253,89 @@ const BlogPost = () => {
  
     let html = content;
  
-    // Only assume it's fully pre-formatted HTML if it contains block-level structural tags
     if (!/<(p|div|h[1-6]|ul|ol|table)\b[^>]*>/i.test(content)) {
+      // Pre-process markdown-like bold/italics
+      let processedContent = content
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.*?)\*/g, "<em>$1</em>");
+
       // Convert raw text into paragraph blocks, auto-detecting headings
-      html = content
+      html = processedContent
         .split(/\n\n+/)
         .map((paragraph) => {
           const trimmed = paragraph.trim();
+          if (!trimmed) return "";
+          
+          const plainText = trimmed.replace(/<[^>]*>/g, "");
+          
+          // Special Highlighted CTA Boxes
+          const isQuestionCTA = plainText.match(/Have a Question|Need Digital Marketing Support/i);
+          const isFollowCTA = plainText.match(/Follow .* for More|Follow Us|Follow Cybaem/i);
+
+          if (isQuestionCTA || isFollowCTA) {
+            let ctaLines = trimmed.split('\n').map(line => line.trim()).filter(Boolean);
+            const titleLine = ctaLines[0] || "";
+            const contentLines = ctaLines.slice(1);
+            // Even if the text already contains <a> tags, this formatting will just wrap them nicely. 
+            // We'll strip existing tags for the formatLinks replacement or just let the global replacer handle them.
+            // But let's make sure we don't break existing <a> tags.
+            const formatLinks = (text: string) => {
+              // If it already has an <a> tag, just return it
+              if (text.includes('<a ')) return text;
+              return text.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline font-semibold break-all">$1</a>');
+            };
+            const icon = isQuestionCTA 
+              ? '<svg class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>' 
+              : '<svg class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>';
+            return `
+              <div class="not-prose my-12 relative overflow-hidden rounded-[24px] bg-gradient-to-br from-slate-50 to-white border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 sm:p-10">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-primary rounded-l-[24px]"></div>
+                <div class="flex flex-col sm:flex-row items-start gap-5">
+                  <div class="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 shadow-sm border border-primary/20">
+                    ${icon}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h4 class="text-xl font-bold text-slate-900 mb-3 tracking-tight font-display">${titleLine.replace(/^[^\w\s<]+/, '').trim()}</h4>
+                    <div class="space-y-2 text-slate-600 text-[1.05rem] leading-relaxed">
+                      ${contentLines.map(line => `<p class="m-0">${formatLinks(line)}</p>`).join('')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
           const isHeading =
-            trimmed.length > 0 &&
-            trimmed.length < 80 &&
+            plainText.length > 0 &&
+            plainText.length < 100 &&
             !trimmed.includes("\n") &&
-            !/[.!?:]$/.test(trimmed);
+            !/[.!?:]$/.test(plainText);
+            
           if (isHeading) return `<h2>${trimmed}</h2>`;
-          return `<p>${trimmed.replace(/\n/g, "<br/>")}</p>`;
+          
+          // Bold standalone subheadings that use single newlines
+          let lines = trimmed.split('\n');
+          lines = lines.map(line => {
+             const linePlain = line.trim().replace(/<[^>]*>/g, "");
+             let processedLine = line.trim();
+             
+             // If a line is short and doesn't end in punctuation, bold it
+             if (linePlain.length > 0 && linePlain.length < 80 && !/[.!?]$/.test(linePlain) && !processedLine.includes("<strong>")) {
+                processedLine = `<strong>${processedLine}</strong>`;
+             }
+             
+             // Convert plain URLs to clickable links
+             if (!processedLine.includes('<a ')) {
+               processedLine = processedLine.replace(
+                 /(https?:\/\/[^\s<]+)/g, 
+                 '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+               );
+             }
+             
+             return processedLine;
+          });
+          
+          return `<p>${lines.join("<br/>")}</p>`;
         })
         .join("");
     }
@@ -259,6 +352,18 @@ const BlogPost = () => {
       html = html.replace(/(<img\b[^>]*>)/, `$1${introLabel}`);
     }
  
+    // GLOBALLY ensure ALL <a> tags open in a new tab
+    html = html.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+      let newAttrs = attrs;
+      if (!/target=/i.test(newAttrs)) {
+        newAttrs += ' target="_blank"';
+      }
+      if (!/rel=/i.test(newAttrs)) {
+        newAttrs += ' rel="noopener noreferrer"';
+      }
+      return `<a${newAttrs}>`;
+    });
+
     return html;
   };
  
@@ -335,7 +440,7 @@ const BlogPost = () => {
       {/* Progress Bar */}
 <motion.div className="fixed top-[72px] left-0 right-0 h-1 bg-slate-200 origin-left z-50 flex">
 <motion.div
-          className="h-full bg-[#0F4CFF]"
+          className="h-full bg-primary"
           style={{ scaleX, width: "100%", transformOrigin: "left" }}
         />
 </motion.div>
@@ -354,7 +459,7 @@ const BlogPost = () => {
 >
             {/* Category + meta */}
 <div className="flex flex-wrap items-center gap-3 mb-4">
-<Badge className="bg-[#0F4CFF] text-white hover:bg-[#0F4CFF]/90 font-semibold px-3 py-1 text-xs uppercase tracking-wider rounded-md shadow-sm">
+<Badge className="bg-primary text-white hover:bg-primary/90 font-semibold px-3 py-1 text-xs uppercase tracking-wider rounded-md shadow-sm">
                 {post.category || "IT Strategy"}
 </Badge>
 <div className="flex items-center gap-4 text-slate-400 text-sm font-medium">
@@ -385,11 +490,50 @@ const BlogPost = () => {
 </div>
 </div>
 <div className="flex items-center gap-2">
-<button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors">
-<Share2 size={13} /> Share
-</button>
-<button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium transition-colors">
-<Bookmark size={13} /> Bookmark
+<div className="flex items-center gap-2">
+  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Share</span>
+  <button 
+    onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
+    className="w-8 h-8 rounded-full flex items-center justify-center bg-[#1877F2]/5 text-[#1877F2] hover:bg-[#1877F2]/15 transition-colors border border-[#1877F2]/20 shadow-sm"
+    title="Share on Facebook"
+  >
+    <Facebook size={14} />
+  </button>
+  <button 
+    onClick={() => window.open(`https://www.instagram.com/`, '_blank')}
+    className="w-8 h-8 rounded-full flex items-center justify-center bg-[#E1306C]/5 text-[#E1306C] hover:bg-[#E1306C]/15 transition-colors border border-[#E1306C]/20 shadow-sm"
+    title="Share on Instagram"
+  >
+    <Instagram size={14} />
+  </button>
+  <button 
+    onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank')}
+    className="w-8 h-8 rounded-full flex items-center justify-center bg-[#0A66C2]/5 text-[#0A66C2] hover:bg-[#0A66C2]/15 transition-colors border border-[#0A66C2]/20 shadow-sm"
+    title="Share on LinkedIn"
+  >
+    <Linkedin size={14} />
+  </button>
+  <button 
+    onClick={() => {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copied to clipboard");
+    }}
+    className="w-8 h-8 rounded-full flex items-center justify-center bg-slate-50 text-slate-600 hover:bg-slate-100 transition-colors border border-slate-200 shadow-sm"
+    title="Copy Link"
+  >
+    <Copy size={14} />
+  </button>
+</div>
+<button 
+  onClick={toggleBookmark}
+  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+    isBookmarked 
+      ? "bg-amber-50 text-amber-600 border border-amber-200" 
+      : "bg-slate-100 hover:bg-slate-200 text-slate-600 border border-transparent"
+  }`}
+>
+  <Bookmark size={13} className={isBookmarked ? "fill-amber-600" : ""} /> 
+  {isBookmarked ? "Bookmarked" : "Bookmark"}
 </button>
 </div>
 </div>
@@ -402,50 +546,73 @@ const BlogPost = () => {
 <aside className="space-y-8 lg:sticky lg:top-[112px] hidden lg:block">
             {/* On This Page */}
             {headings.length > 0 ? (
-<div className="bg-white rounded-[20px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100">
-<h3 className="font-bold text-slate-900 mb-5">On This Page</h3>
-<ul className="space-y-4 text-sm max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                  {headings.map((heading, i) => (
-<li
-                      key={heading.id}
-                      className={`flex items-start gap-3 ${heading.level === 3 ? "ml-4" : ""}`}
->
-<span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold shrink-0 mt-0.5">
-                        {String(i + 1).padStart(2, "0")}
-</span>
-<a
-                        href={`#${heading.id}`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          document
-                            .getElementById(heading.id)
-                            ?.scrollIntoView({
-                              behavior: "smooth",
-                              block: "start",
-                            });
-                        }}
-                        className="text-slate-600 hover:text-[#0F4CFF] transition-colors leading-snug"
->
-                        {heading.text}
-</a>
-</li>
-                  ))}
+<div className="bg-white/90 backdrop-blur-xl rounded-[24px] p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/80 relative overflow-hidden">
+{/* Decorative top gradient */}
+<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-sky-400 opacity-90" />
+<div className="flex items-center gap-2 mb-6">
+  <List size={16} className="text-primary" />
+  <h3 className="font-display font-bold text-slate-900 uppercase tracking-wider text-xs">On This Page</h3>
+</div>
+<ul className="relative space-y-1 text-sm max-h-[60vh] overflow-y-auto pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+  {/* Vertical line behind items */}
+  <div className="absolute left-[7px] top-2 bottom-2 w-px bg-slate-100 -z-10" />
+  {headings.map((heading, i) => (
+    <li
+      key={heading.id}
+      className={`group relative flex items-start gap-4 py-2 ${heading.level === 3 ? "ml-5" : ""}`}
+    >
+      {/* Active state indicator dot or subtle highlight */}
+      <div className="absolute left-[5px] top-[14px] w-[5px] h-[5px] rounded-full bg-slate-200 group-hover:bg-primary transition-colors shadow-sm" />
+      
+      <span className="text-primary/50 text-[10px] font-bold w-4 shrink-0 font-mono mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        {String(i + 1).padStart(2, "0")}
+      </span>
+      <a
+        href={`#${heading.id}`}
+        onClick={(e) => {
+          e.preventDefault();
+          document
+            .getElementById(heading.id)
+            ?.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+        }}
+        className="text-slate-500 hover:text-slate-900 font-medium transition-colors leading-snug transform group-hover:translate-x-0.5 duration-200"
+      >
+        {heading.text}
+      </a>
+    </li>
+  ))}
 </ul>
-<div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium uppercase tracking-wider">
-<span>Article Progress</span>
-<span className="text-[#0F4CFF]">{progress}%</span>
+<div className="mt-8 pt-6 border-t border-slate-100/80">
+  <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3">
+    <span>Article Progress</span>
+    <span className="text-primary">{progress}%</span>
+  </div>
+  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+    <div className="h-full bg-gradient-to-r from-primary to-sky-400 transition-all duration-300 rounded-full" style={{ width: `${progress}%` }} />
+  </div>
 </div>
 </div>
             ) : (
-<div className="bg-white rounded-[20px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100 opacity-60">
-<h3 className="font-bold text-slate-900 mb-5">On This Page</h3>
+<div className="bg-white/90 backdrop-blur-xl rounded-[24px] p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/80 relative overflow-hidden opacity-80">
+<div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-slate-200 to-slate-300" />
+<div className="flex items-center gap-2 mb-6">
+  <List size={16} className="text-slate-400" />
+  <h3 className="font-display font-bold text-slate-900 uppercase tracking-wider text-xs">On This Page</h3>
+</div>
 <p className="text-sm text-slate-500">
-                  Add headers (H2, H3) to your Google Sheet content to generate
-                  navigation.
+  Add headers (H2, H3) to your Google Sheet content to generate navigation.
 </p>
-<div className="mt-6 pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium uppercase tracking-wider">
-<span>Article Progress</span>
-<span className="text-[#0F4CFF]">{progress}%</span>
+<div className="mt-8 pt-6 border-t border-slate-100/80">
+  <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-3">
+    <span>Article Progress</span>
+    <span className="text-slate-400">{progress}%</span>
+  </div>
+  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+    <div className="h-full bg-slate-300 transition-all duration-300 rounded-full" style={{ width: `${progress}%` }} />
+  </div>
 </div>
 </div>
             )}
@@ -457,27 +624,28 @@ const BlogPost = () => {
 <div
               id="blog-content-container"
               className="
-                prose prose-lg max-w-none
-                prose-headings:font-display prose-headings:font-bold prose-headings:text-slate-900
-                prose-h2:text-[1.45rem] prose-h2:mt-12 prose-h2:mb-4 prose-h2:pb-3 prose-h2:border-b prose-h2:border-slate-100
-                prose-h3:text-[1.2rem] prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-[#0F4CFF]
-                prose-p:text-slate-600 prose-p:leading-[1.9] prose-p:mb-7 prose-p:mt-0 prose-p:text-[1.05rem]
-                prose-a:text-[#0F4CFF] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-slate-800 prose-strong:font-semibold
-                prose-li:text-slate-600 prose-li:leading-[1.8] prose-li:my-2
-                prose-ul:mt-5 prose-ul:mb-7 prose-ol:mt-5 prose-ol:mb-7
-                prose-blockquote:not-italic prose-blockquote:border-l-4 prose-blockquote:border-[#0F4CFF]
-                prose-blockquote:bg-blue-50/60 prose-blockquote:rounded-r-2xl prose-blockquote:py-2 prose-blockquote:px-6
-                prose-blockquote:text-slate-700 prose-blockquote:font-medium
-                [&_figure]:mx-auto [&_figure]:max-w-[70%] [&_figure]:block
-                [&_.intro-label]:flex [&_.intro-label]:items-center [&_.intro-label]:gap-3 [&_.intro-label]:mt-10 [&_.intro-label]:mb-6
-                [&_.intro-tag]:inline-flex [&_.intro-tag]:items-center [&_.intro-tag]:px-4 [&_.intro-tag]:py-1.5
-                [&_.intro-tag]:bg-[#0F4CFF] [&_.intro-tag]:text-white [&_.intro-tag]:text-xs
-                [&_.intro-tag]:font-bold [&_.intro-tag]:uppercase [&_.intro-tag]:tracking-widest [&_.intro-tag]:rounded-full
-                prose-img:mt-8 prose-img:mb-12 prose-img:max-h-[340px] prose-img:w-auto prose-img:max-w-full prose-img:mx-auto
-                prose-img:rounded-2xl prose-img:object-cover prose-img:block
-                prose-img:shadow-[0_0_0_6px_rgba(15,76,255,0.08),0_12px_40px_rgba(15,76,255,0.22),-12px_0_40px_rgba(15,76,255,0.12),12px_0_40px_rgba(15,76,255,0.12),0_-8px_30px_rgba(15,76,255,0.1)]
-                text-slate-800
+                prose prose-lg max-w-[80ch] mx-auto
+                prose-headings:font-display prose-headings:font-bold prose-headings:text-slate-900 prose-headings:tracking-tight
+                prose-h2:text-3xl sm:prose-h2:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:pb-4 prose-h2:border-b-2 prose-h2:border-primary/10 prose-h2:leading-tight
+                prose-h3:text-2xl sm:prose-h3:text-3xl prose-h3:mt-12 prose-h3:mb-6 prose-h3:text-slate-800 prose-h3:leading-snug
+                prose-p:text-slate-600 prose-p:leading-loose prose-p:mb-8 prose-p:mt-0 prose-p:text-[1.1rem] sm:prose-p:text-[1.15rem] prose-p:tracking-wide
+                prose-a:text-primary prose-a:font-semibold prose-a:no-underline hover:prose-a:underline hover:prose-a:text-primary/80 transition-colors
+                prose-strong:text-slate-900 prose-strong:font-bold prose-strong:bg-primary/5 prose-strong:px-1.5 prose-strong:py-0.5 prose-strong:rounded-md prose-strong:border-b prose-strong:border-primary/20
+                prose-li:text-slate-600 prose-li:leading-relaxed prose-li:my-3 prose-li:text-[1.1rem] sm:prose-li:text-[1.15rem]
+                prose-ul:mt-6 prose-ul:mb-8 prose-ul:list-none [&>ul>li]:relative [&>ul>li]:pl-8 [&>ul>li::before]:content-[''] [&>ul>li::before]:absolute [&>ul>li::before]:left-2 [&>ul>li::before]:top-[14px] [&>ul>li::before]:w-2 [&>ul>li::before]:h-2 [&>ul>li::before]:bg-primary [&>ul>li::before]:rounded-full [&>ul>li::before]:shadow-[0_0_8px_rgba(15,76,255,0.4)]
+                prose-ol:mt-6 prose-ol:mb-8 prose-ol:list-decimal prose-ol:pl-6 prose-ol:marker:text-primary prose-ol:marker:font-bold
+                prose-blockquote:not-italic prose-blockquote:border-l-4 prose-blockquote:border-primary
+                prose-blockquote:bg-gradient-to-r prose-blockquote:from-primary/10 prose-blockquote:to-transparent prose-blockquote:rounded-r-2xl prose-blockquote:py-5 prose-blockquote:px-8
+                prose-blockquote:text-slate-800 prose-blockquote:font-medium prose-blockquote:text-xl prose-blockquote:leading-relaxed prose-blockquote:shadow-sm
+                [&_figure]:mx-auto [&_figure]:max-w-[85%] [&_figure]:block [&_figure]:my-12
+                [&_.intro-label]:flex [&_.intro-label]:items-center [&_.intro-label]:gap-3 [&_.intro-label]:mt-10 [&_.intro-label]:mb-8
+                [&_.intro-tag]:inline-flex [&_.intro-tag]:items-center [&_.intro-tag]:px-5 [&_.intro-tag]:py-2
+                [&_.intro-tag]:bg-primary [&_.intro-tag]:text-white [&_.intro-tag]:text-xs
+                [&_.intro-tag]:font-bold [&_.intro-tag]:uppercase [&_.intro-tag]:tracking-widest [&_.intro-tag]:rounded-full [&_.intro-tag]:shadow-md
+                prose-img:mt-10 prose-img:mb-14 prose-img:max-h-[450px] prose-img:w-auto prose-img:max-w-full prose-img:mx-auto
+                prose-img:rounded-[20px] prose-img:object-cover prose-img:block
+                prose-img:shadow-[0_0_0_8px_rgba(255,255,255,1),0_20px_50px_-12px_rgba(0,0,0,0.15)]
+                text-slate-800 selection:bg-primary/20 selection:text-primary
               "
               dangerouslySetInnerHTML={{ __html: formatContent(post.content) }}
             />
@@ -513,20 +681,26 @@ const BlogPost = () => {
 </p>
 <div className="flex items-center gap-3">
 <a
-                  href="#"
-                  className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-[#0F4CFF] hover:border-[#0F4CFF] transition-all flex items-center justify-center"
+  href="https://lnkd.in/dgvbSRmA"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-primary hover:border-primary transition-all flex items-center justify-center"
 >
 <Linkedin size={14} />
 </a>
 <a
-                  href="#"
-                  className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-[#0F4CFF] hover:border-[#0F4CFF] transition-all flex items-center justify-center"
+  href="https://x.com/Cybaem_Tech"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-primary hover:border-primary transition-all flex items-center justify-center"
 >
 <Twitter size={14} />
 </a>
 <a
-                  href="#"
-                  className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-[#0F4CFF] hover:border-[#0F4CFF] transition-all flex items-center justify-center"
+  href="https://cybaemtech.com"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-primary hover:border-primary transition-all flex items-center justify-center"
 >
 <Link2 size={14} />
 </a>
@@ -542,7 +716,7 @@ const BlogPost = () => {
 </h3>
 <a
                 href="/blog"
-                className="text-sm font-semibold text-[#0F4CFF] hover:text-blue-700 flex items-center gap-1.5"
+                className="text-sm font-semibold text-primary hover:text-blue-700 flex items-center gap-1.5"
 >
                 View All Articles <ArrowRight size={14} />
 </a>
@@ -566,7 +740,7 @@ const BlogPost = () => {
 <span className="inline-block px-2.5 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider mb-2">
                     {article.category || "IT Strategy"}
 </span>
-<h4 className="font-bold text-slate-900 text-sm leading-snug mb-2 group-hover:text-[#0F4CFF] transition-colors">
+<h4 className="font-bold text-slate-900 text-sm leading-snug mb-2 group-hover:text-primary transition-colors">
                     {article.title}
 </h4>
 <p className="text-xs text-slate-500 flex items-center gap-1.5">
