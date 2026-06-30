@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
 import { contactSeoData } from "@/data/seo/contactSeo";
-import { MapPin, Phone, Mail, ArrowRight, Send, User, MessageSquare, Building2, Globe2 } from "lucide-react";
+import { MapPin, Phone, Mail, ArrowRight, Send, User, MessageSquare, Building2, Globe2, Users, Award, Rocket } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
@@ -188,50 +188,60 @@ const Contact = () => {
       <Navbar />
 
       {/* Hero */}
-      <section ref={heroRef} className="relative pt-32 pb-20 lg:pt-44 lg:pb-28 overflow-hidden" style={{ backgroundColor: "hsl(var(--primary))" }}>
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary-foreground blur-[120px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 rounded-full bg-primary-foreground blur-[100px]" />
-        </div>
-
+      <section ref={heroRef} className="relative pt-32 pb-20 lg:pt-40 lg:pb-24 overflow-hidden bg-white">
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, black 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
         <div className="container mx-auto px-6 lg:px-12 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate={heroInView ? "visible" : "hidden"}
-              className="max-w-2xl"
-            >
-              <motion.span
-                variants={itemVariants}
-                className="text-xs font-bold tracking-[0.2em] uppercase text-[#60A5FA] mb-6 block"
-              >
-                GET IN TOUCH
-              </motion.span>
-              <motion.h1
-                variants={itemVariants}
-                className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-8"
-              >
-                Connect with our<br />IT Service technical<br />leadership
-              </motion.h1>
-              <motion.div variants={itemVariants} className="pl-4 border-l-2 border-[#60A5FA]">
-                <p className="text-lg text-white/90 leading-relaxed max-w-lg">
-                  Submit your inquiry, download case studies or send us a quote — we promise to respond within 24 hours.
-                </p>
+          <div className="grid lg:grid-cols-[1fr_1fr] gap-16 lg:gap-8 items-center">
+
+            {/* Left Content */}
+            <motion.div variants={containerVariants} initial="hidden" animate={heroInView ? "visible" : "hidden"} className="max-w-2xl lg:pr-8">
+              <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50/80 rounded-full mb-8 border border-blue-100">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(15,76,255,0.6)]" />
+                <span className="text-[10px] sm:text-xs font-bold tracking-[0.15em] text-primary uppercase">LEADING TECHNOLOGY SOLUTIONS PROVIDER</span>
               </motion.div>
+
+              <motion.h1 variants={itemVariants} className="font-display text-4xl sm:text-5xl lg:text-[62px] lg:leading-[1.15] font-bold text-slate-900 mb-6 tracking-tight">
+                Let's Build <br />
+                Smarter Solutions <br />
+                <span className="text-primary">for a Better Tomorrow</span>
+              </motion.h1>
+
+              <motion.div variants={itemVariants} className="w-16 h-[5px] bg-primary mb-6" />
+
+              <motion.p variants={itemVariants} className="text-base sm:text-lg text-slate-500 leading-relaxed max-w-[480px] font-medium">
+                Partner with Cybaem Tech for secure, scalable and innovative IT services that empower your business to grow without limits.
+              </motion.p>
             </motion.div>
 
+            {/* Right Content - User Image + Animated Button */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={heroInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="hidden lg:flex justify-end"
+              className="relative w-full flex items-center justify-center lg:justify-end mt-10 lg:-mt-16 lg:-translate-y-4"
             >
+              {/* The user's provided composite image */}
               <img
-                src="/images/contact-hero.avif"
-                alt="Cybaem Tech IT Team"
-                className="w-full max-w-[550px] rounded-2xl shadow-[0_20px_50px_rgba(37,99,235,0.2)] border-[6px] border-white/10 object-cover"
+                src="/images/contact-hero-new.png"
+                alt="Cybaem Tech Hero"
+                className="w-full max-w-[500px] lg:max-w-none lg:w-[130%] object-contain drop-shadow-[0_15px_40px_rgba(15,76,255,0.15)] transition-transform duration-700 lg:-mr-12 lg:scale-110"
+                onError={(e) => {
+                  e.currentTarget.src = "/images/contact-hero.avif";
+                  e.currentTarget.className = "w-full h-full max-w-[650px] object-cover rounded-[40px] lg:rounded-tl-[80px] lg:rounded-br-[80px] lg:rounded-tr-[240px] lg:rounded-bl-[240px] shadow-[0_20px_60px_-15px_rgba(15,76,255,0.2)] lg:-mr-4";
+                }}
               />
+
+              {/* Let's Connect Button (Bottom Left) - Kept for animations! */}
+              <div className="absolute bottom-4 left-6 lg:bottom-16 lg:left-4 z-10 cursor-pointer group" onClick={() => formRef.current?.scrollIntoView({ behavior: 'smooth' })}>
+                <div className="absolute inset-0 rounded-full border border-primary/30 scale-[1.3] animate-[ping_3s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                <div className="absolute inset-0 rounded-full border border-primary/20 scale-[1.6]"></div>
+                <div className="w-28 h-28 lg:w-36 lg:h-36 bg-gradient-to-br from-blue-600 to-primary rounded-full shadow-[0_10px_30px_rgba(15,76,255,0.4)] flex flex-col items-center justify-center text-white group-hover:scale-105 group-hover:shadow-[0_15px_40px_rgba(15,76,255,0.5)] transition-all border-4 border-white relative z-10 overflow-hidden">
+                  <div className="absolute inset-0 bg-white/20 blur-md translate-y-full group-hover:translate-y-0 transition-transform duration-500 rounded-full"></div>
+                  <span className="font-semibold text-sm lg:text-base relative z-10">Let's</span>
+                  <span className="font-semibold text-sm lg:text-base mb-1 relative z-10">Connect</span>
+                  <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform relative z-10" />
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>
