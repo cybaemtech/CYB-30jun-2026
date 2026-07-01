@@ -36,207 +36,86 @@ const HeroSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
   const [isPlayingMobile, setIsPlayingMobile] = useState(false);
-
   return (
-    <section ref={ref} className="relative pt-28 pb-32 lg:pt-32 lg:pb-48 overflow-hidden bg-[#051433] lg:bg-[hsl(var(--primary))]">
-      {/* Background graphic & Subtle Lighting */}
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 pointer-events-none"></div>
-      <div className="absolute -top-40 -right-40 w-[30rem] h-[30rem] bg-blue-500 rounded-full mix-blend-screen filter blur-[100px] opacity-20 animate-blob pointer-events-none"></div>
-      <div className="absolute top-1/2 -left-40 w-[30rem] h-[30rem] bg-indigo-500 rounded-full mix-blend-screen filter blur-[100px] opacity-10 animate-blob animation-delay-2000 pointer-events-none"></div>
+    <section ref={ref} className="relative pt-24 pb-12 lg:pt-28 lg:pb-16 overflow-hidden bg-background">
+      {/* Background patterns */}
+      <div className="absolute inset-0 z-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, #000 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
 
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-8 items-center">
 
-        {/* === DESKTOP LAYOUT (Hidden on mobile) === */}
-        <div className="hidden lg:grid lg:grid-cols-[5fr_7fr] gap-8 lg:gap-12 items-center">
+          {/* Left Content */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
-            className="max-w-2xl"
+            className="max-w-xl"
           >
-            <motion.div variants={itemVariants} className="inline-flex items-center mb-6">
-              <span className="inline-block text-xs font-medium tracking-[0.2em] uppercase text-white/60">
-                Life At Cybaem Tech
-              </span>
-            </motion.div>
-            <motion.h1 variants={itemVariants} className="font-display text-5xl lg:text-7xl font-bold text-white leading-[1.1] mb-6">
-              Build. Innovate. <br />
-              <span className="italic font-light">Grow Together.</span>
+            <motion.span variants={itemVariants} className="inline-block text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase text-primary mb-6 bg-primary/5 px-3 py-1 rounded-full">
+              Life At Cybaem Tech
+            </motion.span>
+
+            <motion.h1 variants={itemVariants} className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-[1.1] mb-6">
+              Build.<br />
+              Innovate.<br />
+              <span className="text-primary italic font-medium" style={{ fontFamily: "cursive" }}>Grow Together.</span>
             </motion.h1>
-            <motion.p variants={itemVariants} className="text-lg lg:text-xl text-white/70 max-w-xl leading-relaxed mb-10">
+
+            <motion.p variants={itemVariants} className="hidden lg:block text-sm sm:text-base text-muted-foreground leading-relaxed mb-8 max-w-lg">
               We are problem solvers, innovators and dreamers. Together, we build technology that creates impact and shapes the future.
             </motion.p>
-            <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-4">
-              <Link
-                to="/about"
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium border border-white/30 text-white rounded-full hover:bg-white/10 transition-colors"
-              >
-                Explore Our Culture <ArrowRight size={14} />
+
+            <motion.div variants={itemVariants} className="hidden lg:flex flex-wrap items-center gap-4">
+              <Link to="/about" className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-opacity shadow-lg shadow-primary/25">
+                Explore Our Culture <ArrowRight size={16} />
               </Link>
-              <Link
-                to="/contact"
-                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium bg-white text-[#071A3D] rounded-full hover:opacity-90 transition-opacity"
-              >
-                Join Our Team <ArrowRight size={14} />
+              <Link to="/contact" className="inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold border border-border text-foreground bg-background rounded-full hover:bg-muted transition-colors shadow-sm">
+                Join Our Team <ArrowRight size={16} className="text-primary" />
               </Link>
             </motion.div>
           </motion.div>
 
-          {/* Hero Video */}
+          {/* Right Image/Video Container */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative hidden lg:flex justify-end w-full"
+            className="relative lg:ml-auto w-full max-w-[600px] mt-12 lg:mt-0"
           >
-            <div className="relative w-full max-w-3xl aspect-[16/9] rounded-[2rem] overflow-hidden border-[6px] border-white/10 shadow-[0_20px_50px_rgba(37,99,235,0.2)]">
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                className="absolute inset-0 w-full h-full object-cover pointer-events-auto"
-              >
-                <source src="/video/video.mp4" type="video/mp4" />
-              </video>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* === MOBILE LAYOUT (Hidden on desktop) === */}
-        <div className="lg:hidden flex flex-col pt-4 pb-2">
-
-          {/* Header Text */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-8"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-[2px] bg-[#38bdf8]"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-[#38bdf8]"></div>
-            </div>
-            <span className="inline-block text-xs font-bold tracking-[0.1em] uppercase text-[#38bdf8] mb-5">
-              Life At Cybaem Tech
-            </span>
-            <h1 className="font-display text-[2.75rem] leading-[1.1] font-bold text-white tracking-tight">
-              Build.<br />
-              Innovate.<br />
-              <div className="relative inline-block mt-0.5">
-                <span className="italic text-[#38bdf8] font-semibold pr-4">Grow Together.</span>
-
-                {/* Underline Swoosh */}
-                <svg className="absolute -bottom-1.5 left-0 w-[90%] h-[6px]" viewBox="0 0 200 10" preserveAspectRatio="none">
-                  <path d="M0,5 Q100,10 200,2" stroke="#1d4ed8" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                  <path d="M10,8 Q100,12 180,4" stroke="#2563eb" strokeWidth="1" fill="none" opacity="0.6" />
-                </svg>
-
-                {/* Paper plane graphics */}
-                <svg className="absolute -top-6 -right-6 w-[56px] h-[56px] text-[#38bdf8]/60" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M80,20 L35,45 L45,55 Z" strokeLinejoin="round" />
-                  <path d="M45,55 L48,65 L55,48" strokeLinejoin="round" />
-                  <path d="M40,65 Q25,85 5,95" strokeDasharray="3 3" />
-                </svg>
-              </div>
-            </h1>
-          </motion.div>
-
-          {/* Video / Image Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="mb-8 relative"
-          >
-            <div className="relative w-full aspect-[4/2.5] rounded-[1.25rem] overflow-hidden border border-white/10 shadow-xl bg-black">
-              {isPlayingMobile ? (
-                <video
-                  autoPlay
-                  controls
-                  playsInline
-                  className="absolute inset-0 w-full h-full object-cover"
-                >
+            <div className="relative rounded-[2rem] bg-[#f8faff] p-[3px] shadow-[0_20px_60px_rgba(15,76,255,0.15)] border border-blue-50/50">
+              <div className="relative rounded-[1.8rem] overflow-hidden aspect-[4/3.2] bg-slate-100 border-4 border-white shadow-inner">
+                <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
                   <source src="/video/video.mp4" type="video/mp4" />
                 </video>
-              ) : (
-                <>
-                  <img src="/lifeatcybaemtech/Foundationday.JPG" alt="Foundation Day Celebration" className="absolute inset-0 w-full h-full object-cover object-center" />
-                  <div className="absolute inset-0 bg-black/10"></div>
+                <div className="absolute inset-0 bg-black/10"></div>
 
-                  {/* Play Button */}
-                  <div
-                    onClick={() => setIsPlayingMobile(true)}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:scale-105 transition-transform z-10"
-                  >
-                    <div className="w-0 h-0 border-t-[7px] border-t-transparent border-l-[12px] border-l-[#1d4ed8] border-b-[7px] border-b-transparent ml-1"></div>
-                  </div>
+              </div>
 
-                  {/* Overlay Text */}
-                  <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-md rounded-lg px-3 py-2 flex items-center gap-3 z-10 pointer-events-none">
-                    <div className="flex items-center gap-1.5 text-white/90">
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                      <span className="text-[11px] font-semibold tracking-wide">02:15</span>
-                    </div>
-                    <div className="w-px h-3 bg-white/30"></div>
-                    <span className="text-[11px] font-medium text-white/90">Foundation Day Celebration</span>
-                  </div>
-                </>
-              )}
+              {/* Top Left Quote Decoration */}
+              <div className="absolute -top-6 -left-6 lg:-top-8 lg:-left-8 w-16 h-16 lg:w-[72px] lg:h-[72px] bg-white rounded-full shadow-lg border border-slate-50 flex items-center justify-center">
+                <span className="text-[40px] text-[#0f4cff] font-serif font-black leading-none mt-4 tracking-tighter">“</span>
+              </div>
+
+              {/* Bottom Right Floating Card */}
+              <div className="absolute -bottom-6 -right-2 lg:-bottom-6 lg:-right-8 bg-white rounded-2xl p-4 shadow-[0_15px_40px_rgba(0,0,0,0.08)] border border-slate-50 flex items-center gap-4 z-10 max-w-[250px]">
+                <div className="w-11 h-11 bg-[#f0f5ff] rounded-[10px] flex items-center justify-center text-[#0f4cff] shrink-0">
+                  <Users size={20} strokeWidth={2} />
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-900 leading-tight text-[13px]">Celebrating People.</p>
+                  <p className="font-medium text-slate-500 leading-tight text-[13px] mt-0.5">Inspiring Future.</p>
+                </div>
+                <div className="absolute -bottom-2 -right-2 w-5 h-5 bg-[#0f4cff] rounded-full shadow-md border-2 border-white"></div>
+              </div>
+
+              {/* Decorative dots grid behind the image */}
+              <div className="absolute -bottom-8 -left-8 w-32 h-32 opacity-40 -z-10 pointer-events-none">
+                <svg width="100%" height="100%" viewBox="0 0 100 100"><pattern id="dots2" x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="#94a3b8" /></pattern><rect width="100" height="100" fill="url(#dots2)" /></svg>
+              </div>
             </div>
-
-            {/* Soft glow behind the video container */}
-            <div className="absolute -inset-2 bg-blue-500/20 blur-xl -z-10 rounded-full opacity-50"></div>
           </motion.div>
-
-          {/* Text Description */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-8"
-          >
-            <p className="text-[#cbd5e1] text-[15px] leading-relaxed">
-              We are problem solvers, innovators and dreamers.
-              Together, we build technology that creates
-              impact and shapes the future.
-            </p>
-          </motion.div>
-
-          {/* Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="flex flex-col gap-3.5"
-          >
-            <Link to="/about" className="flex items-center justify-between w-full p-1.5 bg-[#1d4ed8] text-white rounded-[2rem] hover:bg-blue-700 transition-colors shadow-lg group">
-              <div className="flex items-center gap-4 pl-1">
-                <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center shrink-0">
-                  <Users size={18} className="text-white" />
-                </div>
-                <span className="font-semibold text-[15px]">Explore Our Culture</span>
-              </div>
-              <div className="w-10 h-10 flex items-center justify-center pr-1">
-                <ArrowRight size={20} className="text-white group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-
-            <Link to="/contact" className="flex items-center justify-between w-full p-1.5 bg-white text-[#0f172a] rounded-[2rem] hover:bg-gray-50 transition-colors shadow-md group">
-              <div className="flex items-center gap-4 pl-1">
-                <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center shrink-0 bg-white">
-                  <Briefcase size={18} className="text-[#1d4ed8]" />
-                </div>
-                <span className="font-semibold text-[15px]">Join Our Team</span>
-              </div>
-              <div className="w-10 h-10 flex items-center justify-center pr-1">
-                <ArrowRight size={20} className="text-[#0f172a] group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-          </motion.div>
-
         </div>
+
       </div>
     </section>
   );
@@ -254,7 +133,7 @@ const StatsSection = () => {
   ];
 
   return (
-    <div className="container mx-auto px-6 lg:px-12 relative z-20 -mt-20 mb-24">
+    <div className="container mx-auto px-6 lg:px-12 relative z-20 mt-8 lg:mt-12 mb-8 lg:mb-12">
       <div className="bg-white rounded-[1.5rem] lg:rounded-3xl shadow-xl border border-border p-6 lg:p-10">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-y-6 gap-x-4 lg:gap-8 lg:divide-x divide-border">
           {stats.map((stat, i) => (
@@ -380,21 +259,21 @@ const PeopleSection = () => {
   const activePerson = people[activeIndex];
 
   return (
-    <section className="py-24 bg-background relative overflow-hidden">
+    <section className="pt-8 pb-24 bg-background relative overflow-hidden">
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
         <div className="grid lg:grid-cols-[1.5fr_2.5fr_1.5fr] gap-12 items-center">
 
           {/* Left Text */}
           <div>
             <span className="text-xs font-bold tracking-[0.15em] text-primary uppercase mb-4 block">
-              01 / OUR PEOPLE
+              01 / OUR LEADERSHIP
             </span>
             <h2 className="font-display text-4xl lg:text-[2.75rem] font-bold text-foreground leading-tight mb-6">
-              Real People.<br />
-              Real <span className="text-primary">Impact.</span>
+              Meet Our<br />
+              <span className="text-primary">Executive Board.</span>
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed mb-10 max-w-sm">
-              Meet the exceptional minds driving innovation and building solutions that matter.
+              Meet our CEO, CTO, and Directors—the visionary minds driving innovation and building solutions that matter.
             </p>
             <Link to="#" className="inline-flex items-center gap-2 text-primary font-bold text-sm hover:opacity-80 transition-opacity">
               View All Leaders <ArrowRight size={18} />
@@ -676,7 +555,7 @@ const CelebrationsSection = () => {
                 className={`h-2.5 rounded-full transition-all duration-300 ${current === i ? 'w-8 bg-[#2563eb]' : 'w-2.5 bg-gray-200 hover:bg-gray-300'}`}
                 aria-label={`Go to slide ${i + 1}`}
               />
-            ))}y
+            ))}
           </div>
 
           {/* Bottom Banner */}
