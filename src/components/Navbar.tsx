@@ -125,6 +125,7 @@ const Navbar = () => {
     { label: "Portfolio", href: "/portfolio", isRoute: true },
     { label: "About Us", href: "/about", isRoute: true },
     { label: "Life At CybaemTech", href: "/life-at-cybaemtech", isRoute: true },
+    { label: "Leadership", href: "/leadership", isRoute: true },
     { label: "Blog", href: "/blog", isRoute: true },
     { label: "Contact Us", href: "/contact", isRoute: true },
   ];

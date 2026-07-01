@@ -9,6 +9,7 @@ const navLinks = [
   { label: "Portfolio", href: "/portfolio" },
   { label: "About Us", href: "/about" },
   { label: "Life At CybaemTech", href: "/life-at-cybaemtech" },
+  { label: "Leadership", href: "/leadership" },
   { label: "Blog", href: "/blog" },
   { label: "Contact Us", href: "/contact" },
 ];

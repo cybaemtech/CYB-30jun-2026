@@ -13,6 +13,7 @@ const WebSystems = lazy(() => import("./pages/WebSystems"));
 const ITStaffAugmentation = lazy(() => import("./pages/ITStaffAugmentation"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Approach = lazy(() => import("./pages/Approach"));
+const Leadership = lazy(() => import("./pages/Leadership"));
 const SolutionPage = lazy(() => import("./components/solutions/SolutionPage"));
 const DigitalGrowth = lazy(() => import("./pages/DigitalGrowth"));
 const ManagedIT = lazy(() => import("./pages/ManagedIT"));
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/life-at-cybaemtech" element={<Approach />} />
+            <Route path="/leadership" element={<Leadership />} />
             <Route path="/approach" element={<Navigate to="/life-at-cybaemtech" replace />} />
             <Route path="/solutions/web-systems" element={<WebSystems />} />
             <Route path="/solutions/it-staff-augmentation" element={<ITStaffAugmentation />} />

@@ -39,6 +39,7 @@ const Footer = () => (
             <Link to="/about" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">About Us</Link>
             <Link to="/portfolio" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Portfolio</Link>
             <Link to="/life-at-cybaemtech" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Life At CybaemTech</Link>
+            <Link to="/leadership" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Leadership</Link>
             <Link to="/blog" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</Link>
             <Link to="/contact" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Contact Us</Link>
           </nav>
